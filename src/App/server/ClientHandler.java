@@ -1,11 +1,15 @@
 package App.server;
 
+import App.database.DataBase;
+import App.message.Message;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.SQLException;
 
 public class ClientHandler implements Runnable
 {
@@ -20,9 +24,13 @@ public class ClientHandler implements Runnable
         {
             setupStreams();
             processMessageFromClient();
+        }catch(SQLException sqlException)
+        {
+            sqlException.printStackTrace();
         }catch (SocketException socketException)
         {
             System.out.println("Connection reset by client.");
+            //disconnected
         }catch (IOException ioException)
         {
             ioException.printStackTrace();
@@ -36,13 +44,16 @@ public class ClientHandler implements Runnable
         streamToClient_ = new PrintWriter(clientSocket_.getOutputStream(), AUTO_FLUSH);
         streamFromClient_ = new BufferedReader(new InputStreamReader(clientSocket_.getInputStream()));
     }
-    private void processMessageFromClient() throws IOException
+    private void processMessageFromClient() throws IOException, SQLException
     {
-        String receivedMessage;
-        while ((receivedMessage = streamFromClient_.readLine()) != null)
+        String receivedMessageString;
+        while ((receivedMessageString = streamFromClient_.readLine()) != null)
         {
-            System.out.println("Received message: " + receivedMessage);
+            //to do: see if the message is to signup/login/sendmessage and respond accordingly
+            DataBase dataBase = DataBase.getInstance();
+            dataBase.writeMessageToDataBase(Message.parseMessage(receivedMessageString));
         }
+        //disconnected
     }
     private void closeConnection()
     {

@@ -1,13 +1,13 @@
 package App.client;
 
+import App.message.Message;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.BindException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class Client implements AutoCloseable
 {
@@ -16,7 +16,7 @@ public class Client implements AutoCloseable
         connectToServer();
     }
     @Override
-    public void close() throws Exception
+    public void close()
     {
         disconnectClientFromServer();
     }
@@ -33,7 +33,7 @@ public class Client implements AutoCloseable
             throw ioException;
         }
     }
-    public void sendMessageToServer(String message)
+    public void sendMessageToServer(Message message)
     {
         if (serverSocket_ == null || serverSocket_.isClosed())
         {
@@ -42,7 +42,7 @@ public class Client implements AutoCloseable
         }
         streamToServer_.println(message);
     }
-    private void disconnectClientFromServer() throws IOException
+    private void disconnectClientFromServer()
     {
         try
         {

@@ -1,12 +1,11 @@
 package App.server;
 
-import App.database.DataBase;
+import App.actionhandler.ActionHandler;
 import App.message.Message;
+import App.request.Request;
+import App.user.User;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.sql.SQLException;
@@ -23,37 +22,56 @@ public class ClientHandler implements Runnable
         try
         {
             setupStreams();
-            processMessageFromClient();
-        }catch(SQLException sqlException)
-        {
-            sqlException.printStackTrace();
-        }catch (SocketException socketException)
+            getClientRequests();
+        } catch (SocketException socketException)
         {
             System.out.println("Connection reset by client.");
             //disconnected
-        }catch (IOException ioException)
+        } catch(SQLException | ClassNotFoundException | IOException exception)
         {
-            ioException.printStackTrace();
-        }finally
+            exception.printStackTrace();
+        } finally
         {
             closeConnection();
         }
     }
     private void setupStreams() throws IOException
     {
-        streamToClient_ = new PrintWriter(clientSocket_.getOutputStream(), AUTO_FLUSH);
-        streamFromClient_ = new BufferedReader(new InputStreamReader(clientSocket_.getInputStream()));
+        streamToClient_ = new ObjectOutputStream(clientSocket_.getOutputStream());
+        streamFromClient_ = new ObjectInputStream(clientSocket_.getInputStream());
     }
-    private void processMessageFromClient() throws IOException, SQLException
+    private void processRequest(Request request) throws SQLException, IOException //to do: send an ack signal back
     {
-        String receivedMessageString;
-        while ((receivedMessageString = streamFromClient_.readLine()) != null)
+        switch (request.getAction())
         {
-            //to do: see if the message is to signup/login/sendmessage and respond accordingly
-            DataBase dataBase = DataBase.getInstance();
-            dataBase.writeMessageToDataBase(Message.parseMessage(receivedMessageString));
+            case REGISTER:
+            {
+                ActionHandler.handleRegistration((User)request.getActionSpecificObject());
+            }
+            case LOGIN:
+            {
+                ActionHandler.handleLogin((User)request.getActionSpecificObject());
+            }
+            case SEND_MESSAGE:
+            {
+                //to do the logic here
+            }
         }
-        //disconnected
+    }
+    private void getClientRequests() throws IOException, SQLException, ClassNotFoundException
+    {
+        while (true)
+        {
+            try
+            {
+                Request request = (Request)streamFromClient_.readObject();
+                processRequest(request);
+            }catch (IOException ioException)
+            {
+                System.out.println("User disconnected!");
+                return;
+            }
+        }
     }
     private void closeConnection()
     {
@@ -77,7 +95,6 @@ public class ClientHandler implements Runnable
         }
     }
     private Socket clientSocket_;
-    private PrintWriter streamToClient_;
-    private BufferedReader streamFromClient_;
-    private boolean AUTO_FLUSH = true;
+    private ObjectOutputStream streamToClient_;
+    private ObjectInputStream streamFromClient_;
 }

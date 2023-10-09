@@ -1,8 +1,9 @@
 package App.message;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class Message
+public class Message implements Serializable //to do refactor and remove the whole jsoning part =)))
 {
     public Message(final int senderId,final int receiverId, final String content)
     {

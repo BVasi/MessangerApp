@@ -1,6 +1,10 @@
 package App.UiHandler;
 
 import App.actionhandler.ActionHandler;
+import App.client.Client;
+import App.request.Action;
+import App.request.Request;
+import App.user.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -114,19 +118,14 @@ public class UiHandler
             {
                 try
                 {
-                    if (ActionHandler.handleRegistration(usernameField_.getText(), new String(passwordField_.getPassword())))
+                    Request request = new Request(Action.REGISTER, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
+                    Client client = Client.getInstance();
+                    if (client.sendRequestToServer(request))
                     {
-                        JOptionPane.showMessageDialog(frame_, "Registration succeded!");
+                        JOptionPane.showMessageDialog(frame_, "Registered sucessfully!");
                         showLoginForm();
                     }
-                    else
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Registration failed! Try again!");
-                    }
-                }catch (SQLException sqlException)
-                {
-                    sqlException.printStackTrace();
-                }catch (IOException ioException)
+                } catch (IOException ioException)
                 {
                     ioException.printStackTrace();
                 }
@@ -177,18 +176,13 @@ public class UiHandler
             {
                 try
                 {
-                    if (ActionHandler.handleLogin(usernameField_.getText(), new String(passwordField_.getPassword())))
+                    Request request = new Request(Action.LOGIN, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
+                    Client client = Client.getInstance();
+                    if (client.sendRequestToServer(request)) //to do: proper check if its ok to login
                     {
-                        //to do: main page of the app
-                        JOptionPane.showMessageDialog(frame_, "Logged in successfuly!");
+                        JOptionPane.showMessageDialog(frame_, "Logged in sucessfully!");
+                        //to do main panel
                     }
-                    else
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Username or password is incorrect!");
-                    }
-                }catch (SQLException sqlException)
-                {
-                    sqlException.printStackTrace();
                 }catch (IOException ioException)
                 {
                     ioException.printStackTrace();

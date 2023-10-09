@@ -1,20 +1,17 @@
 package App.user;
 
-import App.client.Client;
-
 import java.io.IOException;
+import java.io.Serializable;
 
-public class User extends Client
+public class User implements Serializable
 {
     public User(final String username, final String password) throws IOException
     {
-        super();
         username_ = username;
         password_ = password;
     }
     public User(final int id, final String username, final String password) throws IOException
     {
-        super();
         id_ = id;
         username_ = username;
         password_ = password;

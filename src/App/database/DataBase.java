@@ -18,7 +18,7 @@ public class DataBase
         }
         return instance_;
     }
-    public User writeUser(String username, String password) throws SQLException, IOException
+    public User writeUser(final User user) throws SQLException, IOException
     {
         OracleDataSource oracleDataSource = new OracleDataSource();
         oracleDataSource.setURL(URL_STRING);
@@ -26,13 +26,13 @@ public class DataBase
         oracleDataSource.setPassword(PASSWORD_STRING);
         Connection connection = oracleDataSource.getConnection();
         PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER);
-        preparedStatement.setString(FIRST_PARAMETER_INDEX, username);
-        preparedStatement.setString(SECOND_PARAMETER_INDEX, password);
+        preparedStatement.setString(FIRST_PARAMETER_INDEX, user.getUsername());
+        preparedStatement.setString(SECOND_PARAMETER_INDEX, user.getPassword());
         preparedStatement.setTimestamp(THIRD_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
         preparedStatement.execute();
         preparedStatement.close();
         connection.close();
-        return getUser(username, password);
+        return getUser(user.getUsername(), user.getPassword());
     }
     public void writeMessageToDataBase(Message message) throws SQLException
     {
@@ -68,13 +68,12 @@ public class DataBase
                     //to do: update last login of that user in the data base
                     return new User(resultSet.getInt(ID), resultSet.getString(USERNAME), resultSet.getString(PASSWORD));
                 }
-                return null;
             }
         }catch (SQLException sqlException)
         {
             sqlException.printStackTrace();
-            return null;
         }
+        return null;
     }
     public int getUserIdByUsername(final String username) throws SQLException
     {

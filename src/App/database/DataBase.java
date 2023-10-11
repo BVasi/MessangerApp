@@ -24,33 +24,41 @@ public class DataBase
         oracleDataSource.setURL(URL_STRING);
         oracleDataSource.setUser(USERNAME_STRING);
         oracleDataSource.setPassword(PASSWORD_STRING);
-        Connection connection = oracleDataSource.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER);
-        preparedStatement.setString(FIRST_PARAMETER_INDEX, user.getUsername());
-        preparedStatement.setString(SECOND_PARAMETER_INDEX, user.getPassword());
-        preparedStatement.setTimestamp(THIRD_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
-        preparedStatement.execute();
-        preparedStatement.close();
-        connection.close();
+        try (Connection connection = oracleDataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER))
+        {
+            preparedStatement.setString(FIRST_PARAMETER_INDEX, user.getUsername());
+            preparedStatement.setString(SECOND_PARAMETER_INDEX, user.getPassword());
+            preparedStatement.setTimestamp(THIRD_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
+            preparedStatement.execute();
+        }catch (SQLException sqlException)
+        {
+            sqlException.printStackTrace();
+        }
         return getUser(user.getUsername(), user.getPassword());
     }
-    public void writeMessageToDataBase(Message message) throws SQLException
+    public boolean writeMessage(final Message message) throws SQLException
     {
         OracleDataSource oracleDataSource = new OracleDataSource();
         oracleDataSource.setURL(URL_STRING);
         oracleDataSource.setUser(USERNAME_STRING);
         oracleDataSource.setPassword(PASSWORD_STRING);
-        Connection connection = oracleDataSource.getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_MESSAGE);
-        preparedStatement.setTimestamp(FIRST_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
-        preparedStatement.setInt(SECOND_PARAMETER_INDEX, message.getSenderId());
-        preparedStatement.setInt(THIRD_PARAMETER_INDEX, message.getReceiverId());
-        preparedStatement.setString(FOURTH_PARAMETER_INDEX, message.getContent());
-        preparedStatement.execute();
-        preparedStatement.close();
-        connection.close();
+        try (Connection connection = oracleDataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_MESSAGE))
+        {
+            preparedStatement.setTimestamp(FIRST_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
+            preparedStatement.setInt(SECOND_PARAMETER_INDEX, getUserIdByUsername(message.getSenderUsername()));
+            preparedStatement.setInt(THIRD_PARAMETER_INDEX, getUserIdByUsername(message.getReceiverUsername()));
+            preparedStatement.setString(FOURTH_PARAMETER_INDEX, message.getContent());
+            preparedStatement.execute();
+            return true;
+        }catch (SQLException sqlException)
+        {
+            sqlException.printStackTrace();
+        }
+        return false;
     }
-    public User getUser(String username, String password) throws SQLException, IOException
+    public User getUser(final String username, final String password) throws SQLException, IOException
     {
         OracleDataSource oracleDataSource = new OracleDataSource();
         oracleDataSource.setURL(URL_STRING);
@@ -66,7 +74,7 @@ public class DataBase
                 if (resultSet.next())
                 {
                     //to do: update last login of that user in the data base
-                    return new User(resultSet.getInt(ID), resultSet.getString(USERNAME), resultSet.getString(PASSWORD));
+                    return new User(resultSet.getString(USERNAME), resultSet.getString(PASSWORD));
                 }
             }
         }catch (SQLException sqlException)
@@ -94,6 +102,10 @@ public class DataBase
                 return -1;
             }
         }
+    }
+    private boolean updateLastLogin()
+    {
+        return true;
     }
     private DataBase() {}
     private static DataBase instance_ = null;

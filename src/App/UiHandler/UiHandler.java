@@ -1,7 +1,7 @@
 package App.UiHandler;
 
-import App.actionhandler.ActionHandler;
 import App.client.Client;
+import App.message.Message;
 import App.request.Action;
 import App.request.Request;
 import App.user.User;
@@ -11,7 +11,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.sql.SQLException;
 
 public class UiHandler
 {
@@ -178,10 +177,9 @@ public class UiHandler
                 {
                     Request request = new Request(Action.LOGIN, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
                     Client client = Client.getInstance();
-                    if (client.sendRequestToServer(request)) //to do: proper check if its ok to login
+                    if (client.sendRequestToServer(request))
                     {
-                        JOptionPane.showMessageDialog(frame_, "Logged in sucessfully!");
-                        //to do main panel
+                        showMainForm();
                     }
                 }catch (IOException ioException)
                 {
@@ -195,12 +193,110 @@ public class UiHandler
         mainPanel_.revalidate();
         mainPanel_.repaint();
     }
+    private void showMainForm()
+    {
+        JPanel mainFormPanel = new JPanel(new BorderLayout());
+        JPanel leftPanel = new JPanel(new BorderLayout());
+
+        JScrollPane conversationScrollPane = new JScrollPane(conversations_);
+        leftPanel.add(conversationScrollPane, BorderLayout.CENTER);
+
+        JPanel searchFieldPanel = new JPanel();
+        searchFieldPanel.setLayout(new BoxLayout(searchFieldPanel, BoxLayout.Y_AXIS));
+
+        JTextField searchField = new JTextField(20);
+        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        searchFieldPanel.add(searchField);
+
+        leftPanel.add(searchFieldPanel, BorderLayout.NORTH);
+
+        JPanel rightPanel = new JPanel(new BorderLayout());
+
+        JPanel messageInputPanel = new JPanel(new BorderLayout());
+
+        JTextField messageField = new JTextField();
+        messageInputPanel.add(messageField, BorderLayout.CENTER);
+
+        JButton sendButton = new JButton("Send");
+        messageInputPanel.add(sendButton, BorderLayout.EAST);
+
+        rightPanel.add(messageInputPanel, BorderLayout.SOUTH);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
+        splitPane.setDividerLocation(200);
+
+        mainFormPanel.add(splitPane, BorderLayout.CENTER);
+        searchField.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    Request request = new Request(Action.SEARCH_USER, searchField.getText());
+                    Client client = Client.getInstance();
+                    if (client.sendRequestToServer(request))
+                    {
+                        if (interactedWithUsers_.contains(searchField.getText()) || searchField.getText().equals(usernameField_.getText()))
+                        {
+                            return;
+                        }
+                        interactedWithUsers_.addElement(searchField.getText());
+                    }
+                    else
+                    {
+                        JOptionPane.showMessageDialog(frame_, "User " + searchField.getText() + " doesn't exist!");
+                    }
+                } catch (IOException exception)
+                {
+                    exception.printStackTrace();
+                }
+            }
+        });
+        messageField.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    Request request = new Request(Action.SEND_MESSAGE, new Message(usernameField_.getText(),
+                            conversations_.getSelectedValue(), messageField.getText()));
+                    Client client = Client.getInstance();
+                    if (!client.sendRequestToServer(request))
+                    {
+                        JOptionPane.showMessageDialog(frame_, "Error at sending message!");
+                    }
+                } catch (IOException exception)
+                {
+                    exception.printStackTrace();
+                }
+                System.out.println(messageField.getText());
+                System.out.println("Sending user: " + usernameField_.getText());
+            }
+        });
+        sendButton.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                System.out.println(messageField.getText());
+            }
+        });
+
+        mainPanel_.removeAll();
+        mainPanel_.add(mainFormPanel, "mainForm");
+        mainPanel_.revalidate();
+        mainPanel_.repaint();
+    }
     private UiHandler() {}
     private static UiHandler instance_;
     private JFrame frame_;
     private JPanel mainPanel_;
     private JTextField usernameField_;
     private JPasswordField passwordField_;
+    DefaultListModel<String> interactedWithUsers_ = new DefaultListModel<>();
+    JList<String> conversations_ = new JList<>(interactedWithUsers_);
     private static final String APPLICATION_TITLE = "Messenger";
     private static final String LOGIN = "Login";
     private static final String REGISTER = "Register";

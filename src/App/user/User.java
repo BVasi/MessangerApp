@@ -10,20 +10,6 @@ public class User implements Serializable
         username_ = username;
         password_ = password;
     }
-    public User(final int id, final String username, final String password) throws IOException
-    {
-        id_ = id;
-        username_ = username;
-        password_ = password;
-    }
-    public int getId()
-    {
-        return id_;
-    }
-    public void setId(final int id)
-    {
-        id_ = id;
-    }
     public String getUsername()
     {
         return username_;
@@ -32,7 +18,6 @@ public class User implements Serializable
     {
         return password_;
     }
-    private int id_;
     private String username_;
     private String password_;
 }

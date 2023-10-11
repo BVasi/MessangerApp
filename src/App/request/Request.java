@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class Request implements Serializable
 {
-    public Request(Action action, Object actionSpecificObject)
+    public Request(final Action action, final Object actionSpecificObject)
     {
         action_ = action;
         actionSpecificObject_ = actionSpecificObject;
@@ -13,12 +13,10 @@ public class Request implements Serializable
     {
         return action_;
     }
-
     public Object getActionSpecificObject()
     {
         return actionSpecificObject_;
     }
-
     private Action action_;
     private Object actionSpecificObject_;
 }

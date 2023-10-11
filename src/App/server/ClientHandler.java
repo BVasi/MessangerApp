@@ -3,6 +3,8 @@ package App.server;
 import App.actionhandler.ActionHandler;
 import App.message.Message;
 import App.request.Request;
+import App.serverresponse.Response;
+import App.serverresponse.ServerResponse;
 import App.user.User;
 
 import java.io.*;
@@ -12,9 +14,10 @@ import java.sql.SQLException;
 
 public class ClientHandler implements Runnable
 {
-    public ClientHandler(Socket clientSocket)
+    public ClientHandler(Socket clientSocket, Server server)
     {
         clientSocket_ = clientSocket;
+        server_ = server;
     }
     @Override
     public void run()
@@ -25,8 +28,8 @@ public class ClientHandler implements Runnable
             getClientRequests();
         } catch (SocketException socketException)
         {
+            server_.disconnect(this);
             System.out.println("Connection reset by client.");
-            //disconnected
         } catch(SQLException | ClassNotFoundException | IOException exception)
         {
             exception.printStackTrace();
@@ -35,26 +38,62 @@ public class ClientHandler implements Runnable
             closeConnection();
         }
     }
+    public void sendMessageToClient(final Message message) throws IOException
+    {
+        streamToClient_.writeObject(message);
+    }
+    public User getLoggedUser()
+    {
+        return loggedUser_;
+    }
     private void setupStreams() throws IOException
     {
         streamToClient_ = new ObjectOutputStream(clientSocket_.getOutputStream());
         streamFromClient_ = new ObjectInputStream(clientSocket_.getInputStream());
     }
-    private void processRequest(Request request) throws SQLException, IOException //to do: send an ack signal back
+    private void processRequest(Request request) throws SQLException, IOException
     {
         switch (request.getAction())
         {
             case REGISTER:
             {
-                ActionHandler.handleRegistration((User)request.getActionSpecificObject());
+                streamToClient_.writeObject(ActionHandler.handleRegistration((User)request.getActionSpecificObject()) ? new ServerResponse(Response.OK) :
+                        new ServerResponse(Response.BAD));
+                break;
             }
             case LOGIN:
             {
-                ActionHandler.handleLogin((User)request.getActionSpecificObject());
+                User tryingUser = (User)request.getActionSpecificObject();
+                if (ActionHandler.handleLogin(tryingUser))
+                {
+                    loggedUser_ = tryingUser;
+                    streamToClient_.writeObject(new ServerResponse(Response.OK));
+                }
+                else
+                {
+                    streamToClient_.writeObject(new ServerResponse(Response.BAD));
+                }
+                break;
             }
             case SEND_MESSAGE:
             {
-                //to do the logic here
+                Message messageToRoute = (Message)request.getActionSpecificObject();
+                if (ActionHandler.handleMessage(messageToRoute))
+                {
+                    server_.routeMessage(messageToRoute);
+                    streamToClient_.writeObject(new ServerResponse(Response.OK));
+                }
+                else
+                {
+                    streamToClient_.writeObject(new ServerResponse(Response.BAD));
+                }
+                break;
+            }
+            case SEARCH_USER:
+            {
+                streamToClient_.writeObject(ActionHandler.handleSearchUser((String)request.getActionSpecificObject()) ? new ServerResponse(Response.OK) :
+                        new ServerResponse(Response.BAD));
+                break;
             }
         }
     }
@@ -69,6 +108,7 @@ public class ClientHandler implements Runnable
             }catch (IOException ioException)
             {
                 System.out.println("User disconnected!");
+                server_.disconnect(this);
                 return;
             }
         }
@@ -94,7 +134,9 @@ public class ClientHandler implements Runnable
             exception.printStackTrace();
         }
     }
-    private Socket clientSocket_;
+    private final Server server_;
+    private final Socket clientSocket_;
     private ObjectOutputStream streamToClient_;
     private ObjectInputStream streamFromClient_;
+    private User loggedUser_; //to do: read comment in server line 42
 }

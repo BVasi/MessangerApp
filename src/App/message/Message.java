@@ -1,43 +1,31 @@
 package App.message;
 
 import java.io.Serializable;
-import java.util.Map;
 
-public class Message implements Serializable //to do refactor and remove the whole jsoning part =)))
+public class Message implements Serializable
 {
-    public Message(final int senderId,final int receiverId, final String content)
+    public Message(final String senderUsername, final String receiverUsername, final String content)
     {
-        senderId_ = senderId;
-        receiverId_ = receiverId;
+        senderUsername_ = senderUsername;
+        receiverUsername_ = receiverUsername;
         content_ = content;
     }
-    @Override
-    public String toString()
+    public String getSenderUsername()
     {
-        return JsonConverter.convertMessageToJson(this);
+        return senderUsername_;
     }
-    public static Message parseMessage(String message)
+    public String getReceiverUsername()
     {
-        Map<String, String> jsonMapOfMessage = JsonConverter.convertJsonToMap(message);
-        return new Message(Integer.parseInt(jsonMapOfMessage.get(SENDER)),
-                Integer.parseInt(jsonMapOfMessage.get(RECEIVER)), jsonMapOfMessage.get(CONTENT));
-    }
-    public int getSenderId()
-    {
-        return senderId_;
-    }
-    public int getReceiverId()
-    {
-        return receiverId_;
+        return receiverUsername_;
     }
     public String getContent()
     {
         return content_;
     }
-    private int senderId_;
-    private int receiverId_;
+    private String senderUsername_;
+    private String receiverUsername_;
     private String content_;
-    static String SENDER = "sender";
-    static String RECEIVER = "receiver";
-    static String CONTENT = "content";
+    private static final String SENDER = "sender";
+    private static final String RECEIVER = "receiver";
+    private static final String CONTENT = "content";
 }

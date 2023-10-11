@@ -1,6 +1,8 @@
 package App.client;
 
 import App.request.Request;
+import App.serverresponse.Response;
+import App.serverresponse.ServerResponse;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -27,14 +29,14 @@ public class Client implements AutoCloseable, Serializable
         {
             serverSocket_ = new Socket(InetAddress.getLocalHost(), PORT_NUMBER);
             streamToServer_ = new ObjectOutputStream(serverSocket_.getOutputStream());
-            streamFromServer_ = new BufferedReader(new InputStreamReader(serverSocket_.getInputStream()));
+            streamFromServer_ = new ObjectInputStream(serverSocket_.getInputStream());
         } catch (IOException ioException)
         {
             ioException.printStackTrace();
             throw ioException;
         }
     }
-    public boolean sendRequestToServer(Request request) throws IOException //to do: wait for a response from the server if the action got completed (registration/login) and return that
+    public boolean sendRequestToServer(Request request) throws IOException
     {
         if (serverSocket_ == null || serverSocket_.isClosed())
         {
@@ -45,13 +47,23 @@ public class Client implements AutoCloseable, Serializable
         {
             streamToServer_.writeObject(request);
             streamToServer_.flush();
-            return true;
-        }catch (IOException ioException)
+            return getAndProcessServerResponse();
+        }catch (IOException | ClassNotFoundException exception)
         {
-            ioException.printStackTrace();
+            exception.printStackTrace();
         }
         return false;
     }
+    private boolean getAndProcessServerResponse() throws IOException, ClassNotFoundException //to do: message dispatcher
+    {
+        ServerResponse serverResponse = (ServerResponse)streamFromServer_.readObject();
+        return serverResponse.getResponse() == Response.OK;
+    }
+    /*
+    dispatcher skeleton:
+    start a new thread to listen for messages, have 2 queues, one for messages for UI and one for suggesting if the operation had or not success
+    have 2 threads, one for each queue that gets the message and processes it (might not work, but it's a starting idea)
+    */
     private void disconnectClientFromServer()
     {
         try
@@ -80,6 +92,6 @@ public class Client implements AutoCloseable, Serializable
     private static Client instance_;
     private Socket serverSocket_;
     private ObjectOutputStream streamToServer_;
-    private BufferedReader streamFromServer_;
+    private ObjectInputStream streamFromServer_;
     private final int PORT_NUMBER = 8888;
 }

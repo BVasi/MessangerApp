@@ -15,7 +15,7 @@ public class Server
         {
             serverSocket_ = new ServerSocket(PORT_NUMBER);
             acceptConnections();
-        }catch(IOException exception)
+        }catch (IOException exception)
         {
             exception.printStackTrace();
         }

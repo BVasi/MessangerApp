@@ -132,7 +132,7 @@ public class UiHandler
                         JOptionPane.showMessageDialog(frame_, "Registered sucessfully!");
                         showLoginForm();
                     }
-                } catch (IOException ioException)
+                }catch (IOException ioException)
                 {
                     ioException.printStackTrace();
                 }
@@ -263,7 +263,7 @@ public class UiHandler
                     {
                         JOptionPane.showMessageDialog(frame_, "User " + searchField.getText() + " doesn't exist!");
                     }
-                } catch (IOException exception)
+                }catch (IOException exception)
                 {
                     exception.printStackTrace();
                 }
@@ -288,7 +288,7 @@ public class UiHandler
                         chatTextArea_.append("You: " + messageField.getText() + "\n");
                         messageField.setText("");
                     }
-                } catch (IOException exception)
+                }catch (IOException exception)
                 {
                     exception.printStackTrace();
                 }
@@ -299,7 +299,29 @@ public class UiHandler
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                System.out.println(messageField.getText());
+                try
+                {
+                    if (conversations_.getSelectedValue() == null)
+                    {
+                        JOptionPane.showMessageDialog(frame_, "Select the user you want to send the message to!");
+                        return;
+                    }
+                    Request request = new Request(Action.SEND_MESSAGE, new Message(usernameField_.getText(),
+                            conversations_.getSelectedValue(), messageField.getText()));
+                    Client client = Client.getInstance();
+                    if (!client.sendRequestToServer(request))
+                    {
+                        JOptionPane.showMessageDialog(frame_, "Error at sending message!");
+                    }
+                    else
+                    {
+                        chatTextArea_.append("You: " + messageField.getText() + "\n");
+                        messageField.setText("");
+                    }
+                }catch (IOException exception)
+                {
+                    exception.printStackTrace();
+                }
             }
         });
 

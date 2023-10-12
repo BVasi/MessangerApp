@@ -1,5 +1,7 @@
 package App.client;
 
+import App.UiHandler.UiHandler;
+import App.message.Message;
 import App.request.Request;
 import App.serverresponse.Response;
 import App.serverresponse.ServerResponse;
@@ -7,6 +9,7 @@ import App.serverresponse.ServerResponse;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Client implements AutoCloseable, Serializable
 {
@@ -47,23 +50,51 @@ public class Client implements AutoCloseable, Serializable
         {
             streamToServer_.writeObject(request);
             streamToServer_.flush();
-            return getAndProcessServerResponse();
-        }catch (IOException | ClassNotFoundException exception)
+            ServerResponse serverResponse;
+            while ((serverResponse = serverResponses_.poll()) == null); //wait for server response
+            return (serverResponse.getResponse() == Response.OK);
+        }catch (IOException exception)
         {
             exception.printStackTrace();
         }
         return false;
     }
-    private boolean getAndProcessServerResponse() throws IOException, ClassNotFoundException //to do: message dispatcher
+    private void startMessageListener()
     {
-        ServerResponse serverResponse = (ServerResponse)streamFromServer_.readObject();
-        return serverResponse.getResponse() == Response.OK;
+        Thread messageListener = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    while (true)
+                    {
+                        Object serverMessage = streamFromServer_.readObject();
+                        if (serverMessage != null)
+                        {
+                            dispatchMessage(serverMessage);
+                        }
+                    }
+                }catch (IOException | ClassNotFoundException exception)
+                {
+                    exception.printStackTrace();
+                }
+            }
+        });
+        messageListener.start();
     }
-    /*
-    dispatcher skeleton:
-    start a new thread to listen for messages, have 2 queues, one for messages for UI and one for suggesting if the operation had or not success
-    have 2 threads, one for each queue that gets the message and processes it (might not work, but it's a starting idea)
-    */
+    private void dispatchMessage(Object serverMessage) throws IOException, ClassNotFoundException
+    {
+        if (serverMessage instanceof ServerResponse)
+        {
+            serverResponses_.offer((ServerResponse)serverMessage);
+        }
+        if (serverMessage instanceof Message)
+        {
+            UiHandler.updateUiMessages((Message)serverMessage);
+        }
+    }
     private void disconnectClientFromServer()
     {
         try
@@ -88,10 +119,12 @@ public class Client implements AutoCloseable, Serializable
     private Client() throws IOException
     {
         connectToServer();
+        startMessageListener();
     }
     private static Client instance_;
     private Socket serverSocket_;
     private ObjectOutputStream streamToServer_;
     private ObjectInputStream streamFromServer_;
-    private final int PORT_NUMBER = 8888;
+    private ConcurrentLinkedQueue<ServerResponse> serverResponses_ = new ConcurrentLinkedQueue<>();
+    private static final int PORT_NUMBER = 8888;
 }

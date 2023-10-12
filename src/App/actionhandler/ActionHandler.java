@@ -29,5 +29,5 @@ public class ActionHandler
         DataBase dataBase = DataBase.getInstance();
         return dataBase.getUserIdByUsername(username) != NOT_FOUND;
     }
-    private static int NOT_FOUND = -1;
+    private static final int NOT_FOUND = -1;
 }

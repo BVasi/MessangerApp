@@ -22,6 +22,14 @@ public class UiHandler
         }
         return instance_;
     }
+    public static void updateUiMessages(Message messageToUpdate)
+    {
+            if (!interactedWithUsers_.contains(messageToUpdate.getSenderUsername())) //remake this so it only appends to that conversation only (make a conversation class)
+            {
+                interactedWithUsers_.addElement(messageToUpdate.getSenderUsername());
+                chatTextArea_.append(messageToUpdate.getSenderUsername() + ": " + messageToUpdate.getContent() + "\n");
+            }
+    }
     public void initialize()
     {
         frame_ = new JFrame(APPLICATION_TITLE);
@@ -212,6 +220,13 @@ public class UiHandler
 
         JPanel rightPanel = new JPanel(new BorderLayout());
 
+        JLabel messageLabel = new JLabel();
+
+        chatTextArea_.setEditable(false);
+
+        JScrollPane toRename = new JScrollPane(chatTextArea_);
+        rightPanel.add(toRename, BorderLayout.CENTER);
+
         JPanel messageInputPanel = new JPanel(new BorderLayout());
 
         JTextField messageField = new JTextField();
@@ -221,6 +236,7 @@ public class UiHandler
         messageInputPanel.add(sendButton, BorderLayout.EAST);
 
         rightPanel.add(messageInputPanel, BorderLayout.SOUTH);
+        rightPanel.add(messageLabel, BorderLayout.EAST);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
         splitPane.setDividerLocation(200);
@@ -267,12 +283,15 @@ public class UiHandler
                     {
                         JOptionPane.showMessageDialog(frame_, "Error at sending message!");
                     }
+                    else
+                    {
+                        chatTextArea_.append("You: " + messageField.getText() + "\n");
+                        messageField.setText("");
+                    }
                 } catch (IOException exception)
                 {
                     exception.printStackTrace();
                 }
-                System.out.println(messageField.getText());
-                System.out.println("Sending user: " + usernameField_.getText());
             }
         });
         sendButton.addActionListener(new ActionListener()
@@ -295,8 +314,9 @@ public class UiHandler
     private JPanel mainPanel_;
     private JTextField usernameField_;
     private JPasswordField passwordField_;
-    DefaultListModel<String> interactedWithUsers_ = new DefaultListModel<>();
-    JList<String> conversations_ = new JList<>(interactedWithUsers_);
+    private static DefaultListModel<String> interactedWithUsers_ = new DefaultListModel<>();
+    private static JList<String> conversations_ = new JList<>(interactedWithUsers_);
+    private static JTextArea chatTextArea_ = new JTextArea();
     private static final String APPLICATION_TITLE = "Messenger";
     private static final String LOGIN = "Login";
     private static final String REGISTER = "Register";

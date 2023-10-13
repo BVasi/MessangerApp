@@ -6,6 +6,7 @@ import oracle.jdbc.pool.OracleDataSource;
 
 import java.io.IOException;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class DataBase
@@ -24,12 +25,15 @@ public class DataBase
         oracleDataSource.setURL(URL_STRING);
         oracleDataSource.setUser(USERNAME_STRING);
         oracleDataSource.setPassword(PASSWORD_STRING);
+        if (getUserIdByUsername(user.getUsername()) != -1)
+        {
+            return null;
+        }
         try (Connection connection = oracleDataSource.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER))
         {
             preparedStatement.setString(FIRST_PARAMETER_INDEX, user.getUsername());
             preparedStatement.setString(SECOND_PARAMETER_INDEX, user.getPassword());
-            preparedStatement.setTimestamp(THIRD_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
             preparedStatement.execute();
         }catch (SQLException sqlException)
         {
@@ -73,7 +77,6 @@ public class DataBase
             {
                 if (resultSet.next())
                 {
-                    //to do: update last login of that user in the data base
                     return new User(resultSet.getString(USERNAME), resultSet.getString(PASSWORD));
                 }
             }
@@ -103,9 +106,24 @@ public class DataBase
             }
         }
     }
-    private boolean updateLastLogin()
+    public boolean updateLastOnline(final String username) throws SQLException
     {
-        return true;
+        OracleDataSource oracleDataSource = new OracleDataSource();
+        oracleDataSource.setURL(URL_STRING);
+        oracleDataSource.setUser(USERNAME_STRING);
+        oracleDataSource.setPassword(PASSWORD_STRING);
+        try (Connection connection = oracleDataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_LAST_ONLINE))
+        {
+            preparedStatement.setTimestamp(FIRST_PARAMETER_INDEX, Timestamp.valueOf(LocalDateTime.now()));
+            preparedStatement.setString(SECOND_PARAMETER_INDEX, username);
+            preparedStatement.execute();
+            return true;
+        }catch (SQLException sqlException)
+        {
+            sqlException.printStackTrace();
+        }
+        return false;
     }
     private DataBase() {}
     private static DataBase instance_ = null;
@@ -122,8 +140,10 @@ public class DataBase
     private final static String ID = "id";
     private final static String USERNAME = "username";
     private final static String PASSWORD = "password";
-    private final String INSERT_USER = "INSERT INTO Users (username, password, lastOnline) VALUES (?, ?, ?)";
+    private final String INSERT_USER = "INSERT INTO Users (username, password) VALUES (?, ?)";
     private final String INSERT_MESSAGE = "INSERT INTO Messages (sendingDate, senderId, receiverId, content) VALUES (?, ?, ?, ?)";
     private final String SELECT_ID = "SELECT id from Users WHERE username = ?";
     private final String SELECT_USER = "SELECT id, username, password from Users WHERE username = ? AND password = ?";
-}
+    private final String UPDATE_LAST_ONLINE = "UPDATE Users SET lastOnline = ? WHERE username = ?";
+} //to do: make a select that gets all the messages from the last time the user was online until LocalDate.now() put it in a vector and send it to the client and on client side
+//the first thing when the user logs in should be to get the vector and for each message to call updateUiMessages(message)

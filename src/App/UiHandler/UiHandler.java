@@ -7,10 +7,16 @@ import App.request.Request;
 import App.user.User;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
 
 public class UiHandler
 {
@@ -24,11 +30,16 @@ public class UiHandler
     }
     public static void updateUiMessages(Message messageToUpdate)
     {
-            if (!interactedWithUsers_.contains(messageToUpdate.getSenderUsername())) //remake this so it only appends to that conversation only (make a conversation class)
-            {
-                interactedWithUsers_.addElement(messageToUpdate.getSenderUsername());
-                chatTextArea_.append(messageToUpdate.getSenderUsername() + ": " + messageToUpdate.getContent() + "\n");
-            }
+        if (!interactedWithUsers_.contains(messageToUpdate.getSenderUsername()))
+        {
+            interactedWithUsers_.addElement(messageToUpdate.getSenderUsername());
+        }
+        if (conversations_.getSelectedValue() != null && conversations_.getSelectedValue().equals(messageToUpdate.getSenderUsername()))
+        {
+            chatTextArea_.append(messageToUpdate.getSenderUsername() + ": " + messageToUpdate.getContent() + "\n");
+        }
+        List<String> messagesList = conversationsMap_.computeIfAbsent(messageToUpdate.getSenderUsername(), k -> new ArrayList<>());
+        messagesList.add(messageToUpdate.getSenderUsername() + ": " + messageToUpdate.getContent() + "\n");
     }
     public void initialize()
     {
@@ -242,6 +253,23 @@ public class UiHandler
         splitPane.setDividerLocation(200);
 
         mainFormPanel.add(splitPane, BorderLayout.CENTER);
+        conversations_.addListSelectionListener(new ListSelectionListener()
+        {
+            @Override
+            public void valueChanged(ListSelectionEvent e)
+            {
+                List<String> conversationMessages = conversationsMap_.get(conversations_.getSelectedValue());
+                chatTextArea_.setText("");
+                if (conversationMessages == null)
+                {
+                    return;
+                }
+                for (String message : conversationMessages)
+                {
+                    chatTextArea_.append(message);
+                }
+            }
+        });
         searchField.addActionListener(new ActionListener()
         {
             @Override
@@ -257,6 +285,7 @@ public class UiHandler
                         {
                             return;
                         }
+                        conversationsMap_.put(searchField.getText(), new ArrayList<>());
                         interactedWithUsers_.addElement(searchField.getText());
                     }
                     else
@@ -276,6 +305,11 @@ public class UiHandler
             {
                 try
                 {
+                    if (conversations_.getSelectedValue() == null)
+                    {
+                        JOptionPane.showMessageDialog(frame_, "Select the user you want to send the message to!");
+                        return;
+                    }
                     Request request = new Request(Action.SEND_MESSAGE, new Message(usernameField_.getText(),
                             conversations_.getSelectedValue(), messageField.getText()));
                     Client client = Client.getInstance();
@@ -285,6 +319,8 @@ public class UiHandler
                     }
                     else
                     {
+                        List<String> messagesList = conversationsMap_.computeIfAbsent(conversations_.getSelectedValue(), k -> new ArrayList<>());
+                        messagesList.add("You" + ": " + messageField.getText() + "\n");
                         chatTextArea_.append("You: " + messageField.getText() + "\n");
                         messageField.setText("");
                     }
@@ -339,6 +375,7 @@ public class UiHandler
     private static DefaultListModel<String> interactedWithUsers_ = new DefaultListModel<>();
     private static JList<String> conversations_ = new JList<>(interactedWithUsers_);
     private static JTextArea chatTextArea_ = new JTextArea();
+    private static Map<String, List<String>> conversationsMap_ = new HashMap<>();
     private static final String APPLICATION_TITLE = "Messenger";
     private static final String LOGIN = "Login";
     private static final String REGISTER = "Register";
@@ -354,4 +391,4 @@ public class UiHandler
     private static final int RIGHT_MARGIN = 0;
     private static final int TEXT_FIELD_WIDTH = 200;
     private static final int TEXT_FIELD_HEIGHT = 30;
-}
+} //to do: refactor this spaghetti code

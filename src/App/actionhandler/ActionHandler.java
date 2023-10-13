@@ -29,5 +29,10 @@ public class ActionHandler
         DataBase dataBase = DataBase.getInstance();
         return dataBase.getUserIdByUsername(username) != NOT_FOUND;
     }
+    public static boolean handleUpdateLastOnline(final String username) throws SQLException
+    {
+        DataBase dataBase = DataBase.getInstance();
+        return dataBase.updateLastOnline(username);
+    }
     private static final int NOT_FOUND = -1;
 }

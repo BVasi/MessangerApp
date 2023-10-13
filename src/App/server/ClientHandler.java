@@ -28,23 +28,17 @@ public class ClientHandler implements Runnable
             getClientRequests();
         } catch (SocketException socketException)
         {
-            server_.disconnect(this);
-            System.out.println("Connection reset by client.");
+            closeConnection();
+            server_.disconnect(this, connectedUser_.getUsername());
+            System.out.println("User disconnected!");
         } catch(SQLException | ClassNotFoundException | IOException exception)
         {
             exception.printStackTrace();
-        } finally
-        {
-            closeConnection();
         }
     }
     public void sendMessageToClient(final Message message) throws IOException
     {
         streamToClient_.writeObject(message);
-    }
-    public User getLoggedUser()
-    {
-        return loggedUser_;
     }
     private void setupStreams() throws IOException
     {
@@ -66,7 +60,8 @@ public class ClientHandler implements Runnable
                 User tryingUser = (User)request.getActionSpecificObject();
                 if (ActionHandler.handleLogin(tryingUser))
                 {
-                    loggedUser_ = tryingUser;
+                    connectedUser_ = tryingUser;
+                    server_.mapUserToClient(connectedUser_.getUsername(),this);
                     streamToClient_.writeObject(new ServerResponse(Response.OK));
                 }
                 else
@@ -107,8 +102,9 @@ public class ClientHandler implements Runnable
                 processRequest(request);
             }catch (IOException ioException)
             {
+                closeConnection();
+                server_.disconnect(this, connectedUser_.getUsername());
                 System.out.println("User disconnected!");
-                server_.disconnect(this);
                 return;
             }
         }
@@ -117,6 +113,10 @@ public class ClientHandler implements Runnable
     {
         try
         {
+            if (connectedUser_ != null && !ActionHandler.handleUpdateLastOnline(connectedUser_.getUsername()))
+            {
+                System.out.println("Error at updating last online for user: " + connectedUser_.getUsername());
+            }
             if (streamFromClient_ != null)
             {
                 streamFromClient_.close();
@@ -129,7 +129,8 @@ public class ClientHandler implements Runnable
             {
                 clientSocket_.close();
             }
-        }catch (IOException exception)
+            connectedUser_ = null;
+        }catch (IOException | SQLException exception)
         {
             exception.printStackTrace();
         }
@@ -138,5 +139,5 @@ public class ClientHandler implements Runnable
     private final Socket clientSocket_;
     private ObjectOutputStream streamToClient_;
     private ObjectInputStream streamFromClient_;
-    private User loggedUser_; //to do: read comment in server line 42
+    private User connectedUser_;
 }

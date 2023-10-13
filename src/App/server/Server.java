@@ -20,6 +20,10 @@ public class Server
             exception.printStackTrace();
         }
     }
+    public void mapUserToClient(final String username, final ClientHandler clientHandler)
+    {
+        usernameClientMap_.put(username, clientHandler);
+    }
     private void acceptConnections() throws IOException
     {
         System.out.println("Waiting for connections...");
@@ -39,20 +43,19 @@ public class Server
             }
         }
     }
-    public void routeMessage(final Message message) throws IOException //to do: make a map for client/user instead of iterating through this and delete user object from ClientHandler
+    public void routeMessage(final Message message) throws IOException
     {
-        for (Map.Entry<ClientHandler, Thread> client : threadClientMap_.entrySet())
+        ClientHandler clientHandler;
+        if ((clientHandler = usernameClientMap_.get(message.getReceiverUsername())) != null)
         {
-            if (client.getKey().getLoggedUser().getUsername().equals(message.getReceiverUsername()))
-            {
-                client.getKey().sendMessageToClient(message);
-            }
+            clientHandler.sendMessageToClient(message);
         }
     }
-    public void disconnect(final ClientHandler clientHandler)
+    public void disconnect(final ClientHandler clientHandler, final String username)
     {
         threadClientMap_.get(clientHandler).interrupt();
         threadClientMap_.remove(clientHandler);
+        usernameClientMap_.remove(username);
     }
     public static void main(String[] args)
     {
@@ -60,5 +63,6 @@ public class Server
     }
     private ServerSocket serverSocket_;
     private Map<ClientHandler, Thread> threadClientMap_ = new HashMap<>();
+    private Map<String, ClientHandler> usernameClientMap_ = new HashMap<>();
     private final int PORT_NUMBER = 8888;
 }

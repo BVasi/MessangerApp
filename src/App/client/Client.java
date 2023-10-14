@@ -9,6 +9,8 @@ import App.serverresponse.ServerResponse;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Client implements AutoCloseable, Serializable
@@ -30,7 +32,7 @@ public class Client implements AutoCloseable, Serializable
     {
         try
         {
-            serverSocket_ = new Socket(InetAddress.getLocalHost(), PORT_NUMBER);
+            serverSocket_ = new Socket(InetAddress.getByName("localhost"), PORT_NUMBER); //to change with real ip, but I won't do this on github lol
             streamToServer_ = new ObjectOutputStream(serverSocket_.getOutputStream());
             streamFromServer_ = new ObjectInputStream(serverSocket_.getInputStream());
         } catch (IOException ioException)
@@ -93,6 +95,15 @@ public class Client implements AutoCloseable, Serializable
         if (serverMessage instanceof Message)
         {
             UiHandler.updateUiMessages((Message)serverMessage);
+        }
+        if (serverMessage instanceof List<?>)
+        {
+            assert serverMessage instanceof ArrayList<?>;
+            ArrayList<Message> messageList = (ArrayList<Message>)serverMessage;
+            for (Message message : messageList)
+            {
+                UiHandler.updateUiMessages(message);
+            }
         }
     }
     private void disconnectClientFromServer()

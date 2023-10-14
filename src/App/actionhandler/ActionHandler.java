@@ -6,6 +6,7 @@ import App.user.User;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 public class ActionHandler
 {
@@ -33,6 +34,11 @@ public class ActionHandler
     {
         DataBase dataBase = DataBase.getInstance();
         return dataBase.updateLastOnline(username);
+    }
+    public static List<Message> handleReceivedMessagesWhenWasOffline(final String username) throws SQLException
+    {
+        DataBase dataBase = DataBase.getInstance();
+        return dataBase.getMessagesFromWhenWasOffline(username);
     }
     private static final int NOT_FOUND = -1;
 }

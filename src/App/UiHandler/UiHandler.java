@@ -12,7 +12,9 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -45,6 +47,14 @@ public class UiHandler
     {
         frame_ = new JFrame(APPLICATION_TITLE);
         frame_.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame_.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                    saveMessagesLocally();
+            }
+        });
         frame_.setSize(CURRENT_WIDTH, CURRENT_HEIGHT);
         frame_.setMinimumSize(new Dimension(MINIMUM_WIDTH, MINIMUM_HEIGHT));
 
@@ -198,6 +208,7 @@ public class UiHandler
                     Client client = Client.getInstance();
                     if (client.sendRequestToServer(request))
                     {
+                        getSavedMessages();
                         showMainForm();
                     }
                 }catch (IOException ioException)
@@ -365,6 +376,41 @@ public class UiHandler
         mainPanel_.add(mainFormPanel, "mainForm");
         mainPanel_.revalidate();
         mainPanel_.repaint();
+    }
+    private void saveMessagesLocally()
+    {
+        String fileName = "conversations_" + usernameField_.getText() + ".bin";
+        try
+        {
+            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName, false));
+            outputStream.writeObject(conversationsMap_);
+            outputStream.close();
+        }catch (IOException exception)
+        {
+            exception.printStackTrace();
+        }
+    }
+    private void getSavedMessages()
+    {
+        String fileName = "conversations_" + usernameField_.getText() + ".bin";
+        File file = new File(fileName);
+        if (!file.exists())
+        {
+            return;
+        }
+        try
+        {
+            ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(fileName));
+            conversationsMap_ = (Map<String, List<String>>)inputStream.readObject();
+            inputStream.close();
+            for (Map.Entry entry : conversationsMap_.entrySet())
+            {
+                interactedWithUsers_.addElement(entry.getKey().toString());
+            }
+        }catch (IOException | ClassNotFoundException exception)
+        {
+            exception.printStackTrace();
+        }
     }
     private UiHandler() {}
     private static UiHandler instance_;

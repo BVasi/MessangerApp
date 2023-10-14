@@ -29,7 +29,11 @@ public class ClientHandler implements Runnable
         } catch (SocketException socketException)
         {
             closeConnection();
-            server_.disconnect(this, connectedUser_.getUsername());
+            if (connectedUser_ != null)
+            {
+                server_.disconnect(this, connectedUser_.getUsername());
+            }
+            connectedUser_ = null;
             System.out.println("User disconnected!");
         } catch(SQLException | ClassNotFoundException | IOException exception)
         {
@@ -63,6 +67,7 @@ public class ClientHandler implements Runnable
                     connectedUser_ = tryingUser;
                     server_.mapUserToClient(connectedUser_.getUsername(),this);
                     streamToClient_.writeObject(new ServerResponse(Response.OK));
+                    streamToClient_.writeObject(ActionHandler.handleReceivedMessagesWhenWasOffline(connectedUser_.getUsername()));
                 }
                 else
                 {
@@ -103,7 +108,11 @@ public class ClientHandler implements Runnable
             }catch (IOException ioException)
             {
                 closeConnection();
-                server_.disconnect(this, connectedUser_.getUsername());
+                if (connectedUser_ != null)
+                {
+                    server_.disconnect(this, connectedUser_.getUsername());
+                }
+                connectedUser_ = null;
                 System.out.println("User disconnected!");
                 return;
             }
@@ -129,7 +138,6 @@ public class ClientHandler implements Runnable
             {
                 clientSocket_.close();
             }
-            connectedUser_ = null;
         }catch (IOException | SQLException exception)
         {
             exception.printStackTrace();

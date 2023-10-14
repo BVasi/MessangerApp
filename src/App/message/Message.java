@@ -25,7 +25,4 @@ public class Message implements Serializable
     private String senderUsername_;
     private String receiverUsername_;
     private String content_;
-    private static final String SENDER = "sender";
-    private static final String RECEIVER = "receiver";
-    private static final String CONTENT = "content";
 }

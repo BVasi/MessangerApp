@@ -52,7 +52,10 @@ public class UiHandler
             @Override
             public void windowClosing(WindowEvent e)
             {
+                if (usernameField_ != null)
+                {
                     saveMessagesLocally();
+                }
             }
         });
         frame_.setSize(CURRENT_WIDTH, CURRENT_HEIGHT);

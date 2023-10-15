@@ -1,0 +1,47 @@
+CREATE TABLE Users (
+  id NUMBER PRIMARY KEY,
+  username VARCHAR2(255) UNIQUE NOT NULL,
+  password VARCHAR2(255) NOT NULL,
+  lastOnline TIMESTAMP
+);
+
+CREATE SEQUENCE UserIDSequence
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE OR REPLACE TRIGGER Users_Insert
+BEFORE INSERT ON Users
+FOR EACH ROW
+BEGIN
+  SELECT UserIDSequence.NEXTVAL INTO :NEW.id FROM DUAL;
+END;
+/
+
+CREATE TABLE Messages (
+  id NUMBER PRIMARY KEY,
+  sendingDate TIMESTAMP,
+  senderId NUMBER REFERENCES Users(id),
+  receiverId NUMBER REFERENCES Users(id),
+  content CLOB
+);
+
+CREATE SEQUENCE MessageIDSequence
+  START WITH 1
+  INCREMENT BY 1
+  NOCACHE
+  NOCYCLE;
+
+CREATE OR REPLACE TRIGGER Messages_Insert
+BEFORE INSERT ON Messages
+FOR EACH ROW
+BEGIN
+  SELECT MessageIDSequence.NEXTVAL INTO :NEW.id FROM DUAL;
+END;
+/
+
+-- put the lines below in cmd
+-- setx DB_URL "url"
+-- setx DB_USERNAME "username"
+-- setx DB_PASSWORD "password"

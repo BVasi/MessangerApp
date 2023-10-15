@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MessangerApp:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MessangerApp_jar</output-path>
+    <root id="archive" name="MessangerApp.jar">
+      <element id="module-output" name="MessangerApp" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/ojdbc8.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

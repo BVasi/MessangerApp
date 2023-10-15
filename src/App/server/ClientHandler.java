@@ -26,16 +26,10 @@ public class ClientHandler implements Runnable
         {
             setupStreams();
             getClientRequests();
-        } catch (SocketException socketException)
+        }catch (SocketException socketException)
         {
-            closeConnection();
-            if (connectedUser_ != null)
-            {
-                server_.disconnect(this, connectedUser_.getUsername());
-            }
-            connectedUser_ = null;
-            System.out.println("User disconnected!");
-        } catch(SQLException | ClassNotFoundException | IOException exception)
+            disconnect();
+        }catch(SQLException | ClassNotFoundException | IOException exception)
         {
             exception.printStackTrace();
         }
@@ -107,13 +101,7 @@ public class ClientHandler implements Runnable
                 processRequest(request);
             }catch (IOException ioException)
             {
-                closeConnection();
-                if (connectedUser_ != null)
-                {
-                    server_.disconnect(this, connectedUser_.getUsername());
-                }
-                connectedUser_ = null;
-                System.out.println("User disconnected!");
+                disconnect();
                 return;
             }
         }
@@ -142,6 +130,16 @@ public class ClientHandler implements Runnable
         {
             exception.printStackTrace();
         }
+    }
+    private void disconnect()
+    {
+        closeConnection();
+        if (connectedUser_ != null)
+        {
+            server_.disconnect(this, connectedUser_.getUsername());
+        }
+        connectedUser_ = null;
+        System.out.println("User disconnected!");
     }
     private final Server server_;
     private final Socket clientSocket_;

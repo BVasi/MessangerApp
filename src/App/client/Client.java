@@ -137,5 +137,5 @@ public class Client implements AutoCloseable, Serializable
     private ObjectOutputStream streamToServer_;
     private ObjectInputStream streamFromServer_;
     private ConcurrentLinkedQueue<ServerResponse> serverResponses_ = new ConcurrentLinkedQueue<>();
-    private static final int PORT_NUMBER = 8888;
+    private static final int PORT_NUMBER = 3389;
 }

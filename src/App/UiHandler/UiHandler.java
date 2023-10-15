@@ -45,35 +45,19 @@ public class UiHandler
     }
     public void initialize()
     {
-        frame_ = new JFrame(APPLICATION_TITLE);
-        frame_.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame_.addWindowListener(new WindowAdapter()
-        {
-            @Override
-            public void windowClosing(WindowEvent e)
-            {
-                if (usernameField_ != null)
-                {
-                    saveMessagesLocally();
-                }
-            }
-        });
-        frame_.setSize(CURRENT_WIDTH, CURRENT_HEIGHT);
-        frame_.setMinimumSize(new Dimension(MINIMUM_WIDTH, MINIMUM_HEIGHT));
-
-        mainPanel_ = new JPanel(new CardLayout());
-
-        JPanel loginPanel = createInitialPanel();
-        mainPanel_.add(loginPanel, "login");
-
-        frame_.add(mainPanel_);
-        frame_.setLocationRelativeTo(null);
-        frame_.setVisible(true);
+        initializeFrame();
+        initializeMainPanelAndAttachItToFrame();
     }
-
+    private void switchToPanel(final JPanel panel, final String panelName)
+    {
+        mainPanel_.remove(LAST_PANEL);
+        mainPanel_.add(panel, panelName);
+        mainPanel_.revalidate();
+        mainPanel_.repaint();
+    }
     private JPanel createInitialPanel()
     {
-        JPanel loginPanel = new JPanel(new GridBagLayout());
+        JPanel initialPanel = new JPanel(new GridBagLayout());
 
         JButton loginButton = new JButton(LOGIN);
         JButton registerButton = new JButton(REGISTER);
@@ -83,14 +67,12 @@ public class UiHandler
         registerButton.setPreferredSize(buttonSize);
 
         GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new Insets(TOP_MARGIN, LEFT_MARGIN, BOTTOM_MARGIN, RIGHT_MARGIN);
+        initializeGridBagConstraints(gridBagConstraints);
 
-        loginPanel.add(registerButton, gridBagConstraints);
+        initialPanel.add(registerButton, gridBagConstraints);
 
         gridBagConstraints.gridy = 1;
-        loginPanel.add(loginButton, gridBagConstraints);
+        initialPanel.add(loginButton, gridBagConstraints);
 
         registerButton.addActionListener(new ActionListener()
         {
@@ -108,7 +90,7 @@ public class UiHandler
             }
         });
 
-        return loginPanel;
+        return initialPanel;
     }
 
     private void showRegistrationForm()
@@ -125,9 +107,7 @@ public class UiHandler
         passwordField_.setPreferredSize(textFieldSize);
 
         GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new Insets(TOP_MARGIN, LEFT_MARGIN, BOTTOM_MARGIN, RIGHT_MARGIN);
+        initializeGridBagConstraints(gridBagConstraints);
 
         registrationPanel.add(usernameLabel, gridBagConstraints);
 
@@ -147,31 +127,15 @@ public class UiHandler
         {
             public void actionPerformed(ActionEvent e)
             {
-                try
-                {
-                    Request request = new Request(Action.REGISTER, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
-                    Client client = Client.getInstance();
-                    if (client.sendRequestToServer(request))
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Registered sucessfully!");
-                        showLoginForm();
-                    }
-                }catch (IOException ioException)
-                {
-                    ioException.printStackTrace();
-                }
+                register();
             }
         });
-
-        mainPanel_.remove(0);
-        mainPanel_.add(registrationPanel, "registration");
-        mainPanel_.revalidate();
-        mainPanel_.repaint();
+        switchToPanel(registrationPanel, "registration");
     }
 
     private void showLoginForm()
     {
-        JPanel registrationPanel = new JPanel(new GridBagLayout());
+        JPanel loginPanel = new JPanel(new GridBagLayout());
         JLabel usernameLabel = new JLabel("Username:");
         JLabel passwordLabel = new JLabel("Password:");
         usernameField_ = new JTextField(20);
@@ -183,48 +147,30 @@ public class UiHandler
         passwordField_.setPreferredSize(textFieldSize);
 
         GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new Insets(TOP_MARGIN, LEFT_MARGIN, BOTTOM_MARGIN, RIGHT_MARGIN);
+        initializeGridBagConstraints(gridBagConstraints);
 
-        registrationPanel.add(usernameLabel, gridBagConstraints);
+        loginPanel.add(usernameLabel, gridBagConstraints);
 
         gridBagConstraints.gridy = 1;
-        registrationPanel.add(usernameField_, gridBagConstraints);
+        loginPanel.add(usernameField_, gridBagConstraints);
 
         gridBagConstraints.gridy = 2;
-        registrationPanel.add(passwordLabel, gridBagConstraints);
+        loginPanel.add(passwordLabel, gridBagConstraints);
 
         gridBagConstraints.gridy = 3;
-        registrationPanel.add(passwordField_, gridBagConstraints);
+        loginPanel.add(passwordField_, gridBagConstraints);
 
         gridBagConstraints.gridy = 4;
-        registrationPanel.add(loginButton, gridBagConstraints);
+        loginPanel.add(loginButton, gridBagConstraints);
 
         loginButton.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent e)
             {
-                try
-                {
-                    Request request = new Request(Action.LOGIN, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
-                    Client client = Client.getInstance();
-                    if (client.sendRequestToServer(request))
-                    {
-                        getSavedMessages();
-                        showMainForm();
-                    }
-                }catch (IOException ioException)
-                {
-                    ioException.printStackTrace();
-                }
+                login();
             }
         });
-
-        mainPanel_.remove(0);
-        mainPanel_.add(registrationPanel, "login");
-        mainPanel_.revalidate();
-        mainPanel_.repaint();
+        switchToPanel(loginPanel, "login");
     }
     private void showMainForm()
     {
@@ -272,16 +218,7 @@ public class UiHandler
             @Override
             public void valueChanged(ListSelectionEvent e)
             {
-                List<String> conversationMessages = conversationsMap_.get(conversations_.getSelectedValue());
-                chatTextArea_.setText("");
-                if (conversationMessages == null)
-                {
-                    return;
-                }
-                for (String message : conversationMessages)
-                {
-                    chatTextArea_.append(message);
-                }
+                updateUiForConversation();
             }
         });
         searchField.addActionListener(new ActionListener()
@@ -289,27 +226,7 @@ public class UiHandler
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                try
-                {
-                    Request request = new Request(Action.SEARCH_USER, searchField.getText());
-                    Client client = Client.getInstance();
-                    if (client.sendRequestToServer(request))
-                    {
-                        if (interactedWithUsers_.contains(searchField.getText()) || searchField.getText().equals(usernameField_.getText()))
-                        {
-                            return;
-                        }
-                        conversationsMap_.put(searchField.getText(), new ArrayList<>());
-                        interactedWithUsers_.addElement(searchField.getText());
-                    }
-                    else
-                    {
-                        JOptionPane.showMessageDialog(frame_, "User " + searchField.getText() + " doesn't exist!");
-                    }
-                }catch (IOException exception)
-                {
-                    exception.printStackTrace();
-                }
+                searchUser(searchField.getText());
             }
         });
         messageField.addActionListener(new ActionListener()
@@ -317,31 +234,7 @@ public class UiHandler
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                try
-                {
-                    if (conversations_.getSelectedValue() == null)
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Select the user you want to send the message to!");
-                        return;
-                    }
-                    Request request = new Request(Action.SEND_MESSAGE, new Message(usernameField_.getText(),
-                            conversations_.getSelectedValue(), messageField.getText()));
-                    Client client = Client.getInstance();
-                    if (!client.sendRequestToServer(request))
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Error at sending message!");
-                    }
-                    else
-                    {
-                        List<String> messagesList = conversationsMap_.computeIfAbsent(conversations_.getSelectedValue(), k -> new ArrayList<>());
-                        messagesList.add("You" + ": " + messageField.getText() + "\n");
-                        chatTextArea_.append("You: " + messageField.getText() + "\n");
-                        messageField.setText("");
-                    }
-                }catch (IOException exception)
-                {
-                    exception.printStackTrace();
-                }
+                sendMessage(messageField);
             }
         });
         sendButton.addActionListener(new ActionListener()
@@ -349,36 +242,10 @@ public class UiHandler
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                try
-                {
-                    if (conversations_.getSelectedValue() == null)
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Select the user you want to send the message to!");
-                        return;
-                    }
-                    Request request = new Request(Action.SEND_MESSAGE, new Message(usernameField_.getText(),
-                            conversations_.getSelectedValue(), messageField.getText()));
-                    Client client = Client.getInstance();
-                    if (!client.sendRequestToServer(request))
-                    {
-                        JOptionPane.showMessageDialog(frame_, "Error at sending message!");
-                    }
-                    else
-                    {
-                        chatTextArea_.append("You: " + messageField.getText() + "\n");
-                        messageField.setText("");
-                    }
-                }catch (IOException exception)
-                {
-                    exception.printStackTrace();
-                }
+                sendMessage(messageField);
             }
         });
-
-        mainPanel_.removeAll();
-        mainPanel_.add(mainFormPanel, "mainForm");
-        mainPanel_.revalidate();
-        mainPanel_.repaint();
+        switchToPanel(mainFormPanel, "mainForm");
     }
     private void saveMessagesLocally()
     {
@@ -415,6 +282,136 @@ public class UiHandler
             exception.printStackTrace();
         }
     }
+    private void initializeFrame()
+    {
+        frame_ = new JFrame(APPLICATION_TITLE);
+        frame_.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame_.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                if (usernameField_ != null)
+                {
+                    saveMessagesLocally();
+                }
+            }
+        });
+        frame_.setSize(CURRENT_WIDTH, CURRENT_HEIGHT);
+        frame_.setMinimumSize(new Dimension(MINIMUM_WIDTH, MINIMUM_HEIGHT));
+    }
+    private void initializeMainPanelAndAttachItToFrame()
+    {
+        mainPanel_ = new JPanel(new CardLayout());
+        JPanel loginPanel = createInitialPanel();
+        mainPanel_.add(loginPanel, "login");
+        frame_.add(mainPanel_);
+        frame_.setLocationRelativeTo(null);
+        frame_.setVisible(true);
+    }
+    private void initializeGridBagConstraints(GridBagConstraints gridBagConstraints)
+    {
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(TOP_MARGIN, LEFT_MARGIN, BOTTOM_MARGIN, RIGHT_MARGIN);
+    }
+    private void register()
+    {
+        try
+        {
+            Request request = new Request(Action.REGISTER, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
+            Client client = Client.getInstance();
+            if (client.sendRequestToServer(request))
+            {
+                JOptionPane.showMessageDialog(frame_, "Registered sucessfully!");
+                showLoginForm();
+            }
+        }catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+    }
+    private void login()
+    {
+        try
+        {
+            Request request = new Request(Action.LOGIN, new User(usernameField_.getText(), new String(passwordField_.getPassword())));
+            Client client = Client.getInstance();
+            if (client.sendRequestToServer(request))
+            {
+                getSavedMessages();
+                showMainForm();
+            }
+        }catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+    }
+    private void updateUiForConversation()
+    {
+        List<String> conversationMessages = conversationsMap_.get(conversations_.getSelectedValue());
+        chatTextArea_.setText("");
+        if (conversationMessages == null)
+        {
+            return;
+        }
+        for (String message : conversationMessages)
+        {
+            chatTextArea_.append(message);
+        }
+    }
+    private void searchUser(final String username)
+    {
+        try
+        {
+            Request request = new Request(Action.SEARCH_USER, username);
+            Client client = Client.getInstance();
+            if (client.sendRequestToServer(request))
+            {
+                if (interactedWithUsers_.contains(username) || username.equals(usernameField_.getText()))
+                {
+                    return;
+                }
+                conversationsMap_.put(username, new ArrayList<>());
+                interactedWithUsers_.addElement(username);
+            }
+            else
+            {
+                JOptionPane.showMessageDialog(frame_, "User " + username + " doesn't exist!");
+            }
+        }catch (IOException exception)
+        {
+            exception.printStackTrace();
+        }
+    }
+    private void sendMessage(JTextField messageField)
+    {
+        try
+        {
+            if (conversations_.getSelectedValue() == null)
+            {
+                JOptionPane.showMessageDialog(frame_, "Select the user you want to send the message to!");
+                return;
+            }
+            Request request = new Request(Action.SEND_MESSAGE, new Message(usernameField_.getText(),
+                    conversations_.getSelectedValue(), messageField.getText()));
+            Client client = Client.getInstance();
+            if (!client.sendRequestToServer(request))
+            {
+                JOptionPane.showMessageDialog(frame_, "Error at sending message!");
+            }
+            else
+            {
+                List<String> messagesList = conversationsMap_.computeIfAbsent(conversations_.getSelectedValue(), k -> new ArrayList<>());
+                messagesList.add("You" + ": " + messageField.getText() + "\n");
+                chatTextArea_.append("You: " + messageField.getText() + "\n");
+                messageField.setText("");
+            }
+        }catch (IOException exception)
+        {
+            exception.printStackTrace();
+        }
+    }
     private UiHandler() {}
     private static UiHandler instance_;
     private JFrame frame_;
@@ -440,4 +437,5 @@ public class UiHandler
     private static final int RIGHT_MARGIN = 0;
     private static final int TEXT_FIELD_WIDTH = 200;
     private static final int TEXT_FIELD_HEIGHT = 30;
+    private static final int LAST_PANEL = 0;
 } //to do: refactor this spaghetti code

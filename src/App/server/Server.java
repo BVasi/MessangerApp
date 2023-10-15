@@ -64,5 +64,5 @@ public class Server
     private ServerSocket serverSocket_;
     private Map<ClientHandler, Thread> threadClientMap_ = new HashMap<>();
     private Map<String, ClientHandler> usernameClientMap_ = new HashMap<>();
-    private final int PORT_NUMBER = 8888;
+    private final int PORT_NUMBER = 3389;
 }

@@ -17,4 +17,4 @@ public class Application
             }
         });
     }
-}
+} //to do: split Client/Server functionalities

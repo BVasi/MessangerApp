@@ -22,8 +22,8 @@ END;
 CREATE TABLE Messages (
   id NUMBER PRIMARY KEY,
   sendingDate TIMESTAMP,
-  senderId NUMBER REFERENCES Users(id),
-  receiverId NUMBER REFERENCES Users(id),
+  senderUsername VARCHAR2(255) REFERENCES Users(username),
+  receiverUsername VARCHAR2(255) REFERENCES Users(username),
   content CLOB
 );
 

@@ -4,8 +4,7 @@ import App.message.Message;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server
 {
@@ -62,7 +61,7 @@ public class Server
         new Server();
     }
     private ServerSocket serverSocket_;
-    private Map<ClientHandler, Thread> threadClientMap_ = new HashMap<>();
-    private Map<String, ClientHandler> usernameClientMap_ = new HashMap<>();
+    private ConcurrentHashMap<ClientHandler, Thread> threadClientMap_ = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, ClientHandler> usernameClientMap_ = new ConcurrentHashMap<>();
     private final int PORT_NUMBER = 3389;
 }

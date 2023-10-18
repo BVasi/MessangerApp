@@ -32,7 +32,7 @@ public class Client implements AutoCloseable, Serializable
     {
         try
         {
-            serverSocket_ = new Socket(InetAddress.getByName("localhost"), PORT_NUMBER); //to change with real ip, but I won't do this on github lol
+            serverSocket_ = new Socket(InetAddress.getByName("192.168.0.102"), PORT_NUMBER); //if somebody wants to use this app locally too, just change the ip with your local ip of the server
             streamToServer_ = new ObjectOutputStream(serverSocket_.getOutputStream());
             streamFromServer_ = new ObjectInputStream(serverSocket_.getInputStream());
         } catch (IOException ioException)

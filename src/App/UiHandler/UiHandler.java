@@ -438,4 +438,4 @@ public class UiHandler
     private static final int TEXT_FIELD_WIDTH = 200;
     private static final int TEXT_FIELD_HEIGHT = 30;
     private static final int LAST_PANEL = 0;
-} //to do: refactor this spaghetti code
+} //I'm sorry about this spaghetti code, but when I port this on android, the current UI code will be gone so I don't really mind it

@@ -17,4 +17,4 @@ public class Application
             }
         });
     }
-} //to do: split Client/Server functionalities
+} //I organized the whole app like this because it's just an example, normally I would have split the client/server functionalities

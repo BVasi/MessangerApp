@@ -12,33 +12,26 @@ public class ActionHandler
 {
     public static boolean handleRegistration(final User user) throws SQLException, IOException
     {
-        DataBase dataBase = DataBase.getInstance();
-        return dataBase.writeUser(user) != null;
+        return DataBase.writeUser(user) != null;
     }
     public static boolean handleLogin(final User user) throws SQLException, IOException
     {
-        DataBase dataBase = DataBase.getInstance();
-        return dataBase.getUser(user.getUsername(), user.getPassword()) != null;
+        return DataBase.getUser(user.getUsername(), user.getPassword()) != null;
     }
     public static boolean handleMessage(final Message message) throws SQLException
     {
-        DataBase dataBase = DataBase.getInstance();
-        return dataBase.writeMessage(message);
+        return DataBase.writeMessage(message);
     }
     public static boolean handleSearchUser(final String username) throws SQLException
     {
-        DataBase dataBase = DataBase.getInstance();
-        return dataBase.getUserIdByUsername(username) != NOT_FOUND;
+        return DataBase.getUserIdByUsername(username) != DataBase.NOT_FOUND;
     }
     public static boolean handleUpdateLastOnline(final String username) throws SQLException
     {
-        DataBase dataBase = DataBase.getInstance();
-        return dataBase.updateLastOnline(username);
+        return DataBase.updateLastOnline(username);
     }
     public static List<Message> handleReceivedMessagesWhenWasOffline(final String username) throws SQLException
     {
-        DataBase dataBase = DataBase.getInstance();
-        return dataBase.getMessagesFromWhenWasOffline(username);
+        return DataBase.getMessagesFromWhenWasOffline(username);
     }
-    private static final int NOT_FOUND = -1;
 }

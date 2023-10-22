@@ -75,7 +75,21 @@ public class Client implements AutoCloseable, Serializable
                         Object serverMessage = streamFromServer_.readObject();
                         if (serverMessage != null)
                         {
-                            dispatchMessage(serverMessage);
+                            Thread messageDispatcher = new Thread(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    try
+                                    {
+                                        dispatchMessage(serverMessage);
+                                    } catch (IOException | ClassNotFoundException e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                            messageDispatcher.start();
                         }
                     }
                 }catch (IOException | ClassNotFoundException exception)

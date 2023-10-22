@@ -30,6 +30,10 @@ public class ActionHandler
     {
         return DataBase.updateLastOnline(username);
     }
+    public static boolean handleSeen(final String[] senderAndReceiverUsernames) throws SQLException
+    {
+        return DataBase.updateSeenMessages(senderAndReceiverUsernames);
+    }
     public static List<Message> handleReceivedMessagesWhenWasOffline(final String username) throws SQLException
     {
         return DataBase.getMessagesFromWhenWasOffline(username);

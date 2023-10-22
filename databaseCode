@@ -21,10 +21,11 @@ END;
 
 CREATE TABLE Messages (
   id NUMBER PRIMARY KEY,
-  sendingDate TIMESTAMP,
-  senderUsername VARCHAR2(255) REFERENCES Users(username),
-  receiverUsername VARCHAR2(255) REFERENCES Users(username),
-  content CLOB
+  sendingDate TIMESTAMP NOT NULL,
+  senderUsername VARCHAR2(255) REFERENCES Users(username) NOT NULL,
+  receiverUsername VARCHAR2(255) REFERENCES Users(username) NOT NULL,
+  content CLOB NOT NULL,
+  isSeen NUMBER(1) DEFAULT 0 NOT NULL
 );
 
 CREATE SEQUENCE MessageIDSequence
@@ -42,6 +43,6 @@ END;
 /
 
 -- put the lines below in cmd
--- setx DB_URL "url"
+-- setx DB_URL "jdbc:oracle:thin:@localhost:1521:XE"
 -- setx DB_USERNAME "username"
 -- setx DB_PASSWORD "password"

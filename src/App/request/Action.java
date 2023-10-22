@@ -7,5 +7,6 @@ public enum Action implements Serializable
     REGISTER,
     LOGIN,
     SEND_MESSAGE,
-    SEARCH_USER
+    SEARCH_USER,
+    SEEN
 }

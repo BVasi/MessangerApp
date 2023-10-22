@@ -89,6 +89,12 @@ public class ClientHandler implements Runnable
                         new ServerResponse(Response.BAD));
                 break;
             }
+            case SEEN:
+            {
+                streamToClient_.writeObject(ActionHandler.handleSeen((String[])request.getActionSpecificObject()) ? new ServerResponse(Response.OK) :
+                        new ServerResponse(Response.BAD));
+                break;
+            }
         }
     }
     private void getClientRequests() throws IOException, SQLException, ClassNotFoundException

@@ -30,7 +30,7 @@ public class UiHandler
         }
         return instance_;
     }
-    public static void updateUiMessages(Message messageToUpdate)
+    public static void updateUiMessages(Message messageToUpdate) throws IOException
     {
         if (!interactedWithUsers_.contains(messageToUpdate.getSenderUsername()))
         {
@@ -39,6 +39,8 @@ public class UiHandler
         if (conversations_.getSelectedValue() != null && conversations_.getSelectedValue().equals(messageToUpdate.getSenderUsername()))
         {
             chatTextArea_.append(messageToUpdate.getSenderUsername() + ": " + messageToUpdate.getContent() + "\n");
+            String[] senderAndReceiverUsernames = {messageToUpdate.getSenderUsername(), messageToUpdate.getReceiverUsername()};
+            sendSeenUpdateRequest(senderAndReceiverUsernames);
         }
         List<String> messagesList = conversationsMap_.computeIfAbsent(messageToUpdate.getSenderUsername(), k -> new ArrayList<>());
         messagesList.add(messageToUpdate.getSenderUsername() + ": " + messageToUpdate.getContent() + "\n");
@@ -218,7 +220,13 @@ public class UiHandler
             @Override
             public void valueChanged(ListSelectionEvent e)
             {
-                updateUiForConversation();
+                try
+                {
+                    updateUiForConversation();
+                } catch (IOException ioException)
+                {
+                    ioException.printStackTrace();
+                }
             }
         });
         searchField.addActionListener(new ActionListener()
@@ -347,7 +355,7 @@ public class UiHandler
             ioException.printStackTrace();
         }
     }
-    private void updateUiForConversation()
+    private void updateUiForConversation() throws IOException
     {
         List<String> conversationMessages = conversationsMap_.get(conversations_.getSelectedValue());
         chatTextArea_.setText("");
@@ -355,6 +363,8 @@ public class UiHandler
         {
             return;
         }
+        String[] senderAndReceiverUsernames = {conversations_.getSelectedValue(), usernameField_.getText()};
+        sendSeenUpdateRequest(senderAndReceiverUsernames);
         for (String message : conversationMessages)
         {
             chatTextArea_.append(message);
@@ -412,9 +422,18 @@ public class UiHandler
             exception.printStackTrace();
         }
     }
+    private static void sendSeenUpdateRequest(final String[] senderAndReceiverUsernames) throws IOException
+    {
+        Request request = new Request(Action.SEEN, senderAndReceiverUsernames);
+        Client client = Client.getInstance();
+        if (!client.sendRequestToServer(request))
+        {
+            JOptionPane.showMessageDialog(frame_, "Error at updating seen status!");
+        }
+    }
     private UiHandler() {}
     private static UiHandler instance_;
-    private JFrame frame_;
+    private static JFrame frame_;
     private JPanel mainPanel_;
     private JTextField usernameField_;
     private JPasswordField passwordField_;

@@ -139,6 +139,25 @@ public class DataBase
         }
         return messageList;
     }
+    public static boolean updateSeenMessages(final String[] senderAndReceiverUsernames) throws SQLException
+    {
+        OracleDataSource oracleDataSource = new OracleDataSource();
+        oracleDataSource.setURL(URL_STRING);
+        oracleDataSource.setUser(USERNAME_STRING);
+        oracleDataSource.setPassword(PASSWORD_STRING);
+        try (Connection connection = oracleDataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_SEEN))
+        {
+            preparedStatement.setString(FIRST_PARAMETER_INDEX, senderAndReceiverUsernames[0]);
+            preparedStatement.setString(SECOND_PARAMETER_INDEX, senderAndReceiverUsernames[1]);
+            preparedStatement.execute();
+            return true;
+        }catch (SQLException sqlException)
+        {
+            sqlException.printStackTrace();
+        }
+        return false;
+    }
     public static final int NOT_FOUND = -1;
     private final static String DB_URL = "DB_URL";
     private final  static String DB_USERNAME = "DB_USERNAME";
@@ -160,5 +179,6 @@ public class DataBase
     private final static String SELECT_ID = "SELECT id from Users WHERE username = ?";
     private final static String SELECT_USER = "SELECT id, username, password from Users WHERE username = ? AND password = ?";
     private final static String UPDATE_LAST_ONLINE = "UPDATE Users SET lastOnline = ? WHERE username = ?";
+    private final static String UPDATE_SEEN = "UPDATE Messages SET isSeen = 1 WHERE senderUsername = ? AND receiverUsername = ? AND isSeen = 0";
     private final static String SELECT_RECEIVED_MESSAGES_WHEN_WAS_OFFLINE = "SELECT m.senderUsername, m.content FROM Messages m WHERE m.receiverUsername = (SELECT u.username FROM Users u WHERE m.sendingDate > u.lastOnline AND u.username = ?)";
 }

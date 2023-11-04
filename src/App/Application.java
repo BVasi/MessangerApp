@@ -8,13 +8,10 @@ public class Application
 {
     public static void main(String[] args)
     {
-        SwingUtilities.invokeLater(new Runnable()
+        SwingUtilities.invokeLater(() ->
         {
-            public void run()
-            {
-                UiHandler uiHandler = UiHandler.getInstance();
-                uiHandler.initialize();
-            }
+            UiHandler uiHandler = UiHandler.getInstance();
+            uiHandler.initialize();
         });
     }
 } //I organized the whole app like this because it's just an example, normally I would have split the client/server functionalities

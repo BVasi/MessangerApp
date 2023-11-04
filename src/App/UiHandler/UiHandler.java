@@ -7,11 +7,7 @@ import App.request.Request;
 import App.user.User;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -76,21 +72,9 @@ public class UiHandler
         gridBagConstraints.gridy = 1;
         initialPanel.add(loginButton, gridBagConstraints);
 
-        registerButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                showRegistrationForm();
-            }
-        });
+        registerButton.addActionListener(event -> showRegistrationForm());
 
-        loginButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                showLoginForm();
-            }
-        });
+        loginButton.addActionListener(event -> showLoginForm());
 
         return initialPanel;
     }
@@ -125,13 +109,7 @@ public class UiHandler
         gridBagConstraints.gridy = 4;
         registrationPanel.add(registerButton, gridBagConstraints);
 
-        registerButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                register();
-            }
-        });
+        registerButton.addActionListener(event -> register());
         switchToPanel(registrationPanel, "registration");
     }
 
@@ -165,13 +143,7 @@ public class UiHandler
         gridBagConstraints.gridy = 4;
         loginPanel.add(loginButton, gridBagConstraints);
 
-        loginButton.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent e)
-            {
-                login();
-            }
-        });
+        loginButton.addActionListener(event -> login());
         switchToPanel(loginPanel, "login");
     }
     private void showMainForm()
@@ -215,44 +187,19 @@ public class UiHandler
         splitPane.setDividerLocation(200);
 
         mainFormPanel.add(splitPane, BorderLayout.CENTER);
-        conversations_.addListSelectionListener(new ListSelectionListener()
+        conversations_.addListSelectionListener(event ->
         {
-            @Override
-            public void valueChanged(ListSelectionEvent e)
+            try
             {
-                try
-                {
-                    updateUiForConversation();
-                } catch (IOException ioException)
-                {
-                    ioException.printStackTrace();
-                }
+                updateUiForConversation();
+            } catch (IOException ioException)
+            {
+                ioException.printStackTrace();
             }
         });
-        searchField.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                searchUser(searchField.getText());
-            }
-        });
-        messageField.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                sendMessage(messageField);
-            }
-        });
-        sendButton.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                sendMessage(messageField);
-            }
-        });
+        searchField.addActionListener(event -> searchUser(searchField.getText()));
+        messageField.addActionListener(event -> sendMessage(messageField));
+        sendButton.addActionListener(event -> sendMessage(messageField));
         switchToPanel(mainFormPanel, "mainForm");
     }
     private void saveMessagesLocally()

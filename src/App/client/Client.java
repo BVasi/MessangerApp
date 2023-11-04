@@ -63,39 +63,29 @@ public class Client implements AutoCloseable, Serializable
     }
     private void startMessageListener()
     {
-        Thread messageListener = new Thread(new Runnable()
-        {
-            @Override
-            public void run()
+        Thread messageListener = new Thread(() -> {
+            try
             {
-                try
+                while (true)
                 {
-                    while (true)
+                    Object serverMessage = streamFromServer_.readObject();
+                    if (serverMessage != null)
                     {
-                        Object serverMessage = streamFromServer_.readObject();
-                        if (serverMessage != null)
-                        {
-                            Thread messageDispatcher = new Thread(new Runnable()
+                        Thread messageDispatcher = new Thread(() -> {
+                            try
                             {
-                                @Override
-                                public void run()
-                                {
-                                    try
-                                    {
-                                        dispatchMessage(serverMessage);
-                                    } catch (IOException | ClassNotFoundException e)
-                                    {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-                            messageDispatcher.start();
-                        }
+                                dispatchMessage(serverMessage);
+                            } catch (IOException | ClassNotFoundException e)
+                            {
+                                e.printStackTrace();
+                            }
+                        });
+                        messageDispatcher.start();
                     }
-                }catch (IOException | ClassNotFoundException exception)
-                {
-                    exception.printStackTrace();
                 }
+            }catch (IOException | ClassNotFoundException exception)
+            {
+                exception.printStackTrace();
             }
         });
         messageListener.start();
